@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MODEST QUEST: FASHION STUDIO</title>
+    <!-- Font Ceria & Moden -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js untuk Kesan Bunyi Sintetik -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        :root {
+            --pink: #FF8FB1;
+            --pink-dark: #E86A92;
+            --pink-light: #FFF0F5;
+            --lavender: #C3B1E1;
+            --lavender-dark: #8E7AB5;
+            --lavender-light: #F4F0FA;
+            --cream: #FFFDF7;
+            --turquoise: #4ECDC4;
+            --turquoise-dark: #2B9EB3;
+            --gold: #FFD166;
+            --gold-dark: #E0A82E;
+            --text-dark: #4A3B52;
+            --text-muted: #7D6B87;
+            --shadow-soft: 0 10px 25px rgba(74, 59, 82, 0.14);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: radial-gradient(circle at top left, #FFE4EE, #E8DFF5, #D2F3F0);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 8px;
+        }
+
+        h1, h2, h3, h4, .game-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Bingkai Permainan Utama 2D */
+        #game-frame {
+            width: 100%;
+            max-width: 1040px;
+            height: 94vh;
+            max-height: 740px;
+            min-height: 580px;
+            background: linear-gradient(180deg, #FFF7FA 0%, #FFFDF7 65%, #F5E6DC 65%, #EDD4C4 100%);
+            border-radius: 32px;
+            border: 6px solid #FFFFFF;
+            box-shadow: 0 22px 55px rgba(74, 59, 82, 0.22);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Latar Belakang Butik Fesyen 2D Vektor */
+        #boutique-2d-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* HUD BAR */
+        #hud {
+            position: relative;
+            z-index: 25;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 3px solid var(--pink-light);
+            gap: 10px;
+        }
+
+        .hud-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--lavender-light);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 2px solid var(--lavender);
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 0 var(--lavender);
+            white-space: nowrap;
+        }
+
+        .score-badge {
+            background: #FFF9E6;
+            border-color: var(--gold);
+            box-shadow: 0 3px 0 var(--gold-dark);
+            color: #9C6B00;
+        }
+
+        .progress-wrapper {
+            flex: 1;
+            max-width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--lavender-dark);
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 13px;
+            background: #EAE2F8;
+            border-radius: 10px;
+            padding: 2px;
+            border: 2px solid var(--lavender);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--pink), var(--turquoise));
+            border-radius: 8px;
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Butang Permainan 2D Bubble */
+        .btn-game {
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 22px;
+            font-size: 0.98rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            white-space: nowrap;
+        }
+
+        .btn-game:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.04);
+        }
+
+        .btn-game:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2) !important;
+        }
+
+        .btn-pink {
+            background: linear-gradient(180deg, #FFA4C0 0%, var(--pink) 100%);
+            color: white;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 5px 0 var(--pink-dark), 0 8px 18px rgba(232, 106, 146, 0.3);
+        }
+
+        .btn-turquoise {
+            background: linear-gradient(180deg, #6EE2DA 0%, var(--turquoise) 100%);
+            color: white;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 5px 0 var(--turquoise-dark), 0 8px 18px rgba(43, 158, 179, 0.25);
+        }
+
+        .btn-gold {
+            background: linear-gradient(180deg, #FFE08C 0%, var(--gold) 100%);
+            color: #6E4A00;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 5px 0 var(--gold-dark), 0 8px 18px rgba(224, 168, 46, 0.25);
+            text-shadow: none;
+        }
+
+        .btn-lavender {
+            background: linear-gradient(180deg, #D5C6EE 0%, var(--lavender) 100%);
+            color: white;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 5px 0 var(--lavender-dark);
+        }
+
+        /* Lapisan Skrin Permainan */
+        .ui-layer {
+            position: relative;
+            z-index: 15;
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 14px 18px;
+            overflow: hidden;
+        }
+
+        .ui-layer.active {
+            display: flex;
+            animation: fadeIn 0.35s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes floatChar {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-7px); }
+        }
+
+        .float-anim {
+            animation: floatChar 3s ease-in-out infinite;
+        }
+
+        /* ================= SKRIN UTAMA ================= */
+        #screen-home {
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .home-hero-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 820px;
+        }
+
+        .home-card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 4px solid #FFFFFF;
+            border-radius: 30px;
+            padding: 22px 28px;
+            text-align: center;
+            max-width: 460px;
+            width: 100%;
+            box-shadow: 0 18px 40px rgba(74, 59, 82, 0.16);
+        }
+
+        .game-logo h1 {
+            font-size: 2.3rem;
+            line-height: 1.05;
+            background: linear-gradient(45deg, var(--pink-dark), var(--lavender-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-2d {
+            display: inline-block;
+            background: linear-gradient(90deg, var(--turquoise), var(--pink));
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        /* ================= PETA 8 MISI ================= */
+        #screen-map {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .map-board {
+            background: rgba(255, 255, 255, 0.95);
+            border: 5px solid #FFFFFF;
+            border-radius: 30px;
+            padding: 18px 22px;
+            width: 100%;
+            max-width: 880px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .mission-node {
+            background: #FFFFFF;
+            border: 3px solid #E6DCF7;
+            border-radius: 22px;
+            padding: 12px 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .mission-node.unlocked {
+            border-color: var(--pink);
+            background: linear-gradient(180deg, #FFFFFF 0%, #FFF2F6 100%);
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--pink);
+        }
+
+        .mission-node.unlocked:hover {
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .mission-node.completed {
+            border-color: var(--turquoise);
+            background: linear-gradient(180deg, #FFFFFF 0%, #E8FBF9 100%);
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--turquoise);
+        }
+
+        .mission-node.locked {
+            opacity: 0.65;
+            background: #F4F1F8;
+            cursor: not-allowed;
+        }
+
+        .status-pill {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+        .status-locked { background: #E0D8EB; color: #6E627A; }
+        .status-unlocked { background: var(--gold); color: #6E4A00; animation: pulse 1.5s infinite; }
+        .status-playing { background: var(--pink); color: #FFFFFF; animation: pulse 1.2s infinite; }
+        .status-completed { background: var(--turquoise); color: white; }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+
+        /* ================= RUANG KERJA MISI 2D SPLIT ================= */
+        .mission-header-bar {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid var(--turquoise);
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+            margin-bottom: 10px;
+        }
+
+        .workspace-split {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 0.95fr 1.2fr;
+            gap: 14px;
+            min-height: 0;
+        }
+
+        /* Bahagian Kiri: Cermin & Pentas Patung Peragaan 2D */
+        .stage-2d-viewport {
+            background: rgba(255, 255, 255, 0.85);
+            border: 4px solid #FFFFFF;
+            border-radius: 26px;
+            padding: 10px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-2d-viewport.runway-mode {
+            background: linear-gradient(180deg, #3B2854 0%, #5E3F82 68%, #FF5E7E 68%, #E84A69 100%);
+            border-color: var(--gold);
+        }
+
+        .mannequin-svg-wrap {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        .stage-floating-tag {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid var(--gold);
+            padding: 5px 14px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #7A5200;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+            text-align: center;
+            z-index: 5;
+        }
+
+        /* Panel Kawalan Sebelah Kanan */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 4px solid #FFFFFF;
+            border-radius: 26px;
+            padding: 14px;
+            box-shadow: var(--shadow-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .tabs-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .tab-btn {
+            background: var(--lavender-light);
+            border: 2px solid var(--lavender);
+            border-radius: 14px;
+            padding: 7px 4px;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 0.84rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tab-btn.active {
+            background: var(--pink);
+            border-color: var(--pink-dark);
+            color: white;
+            box-shadow: 0 3px 0 var(--pink-dark);
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .choice-card {
+            background: #FFFFFF;
+            border: 3px solid #EFE8FA;
+            border-radius: 18px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--turquoise);
+        }
+
+        .choice-card.selected {
+            border-color: var(--pink);
+            background: var(--pink-light);
+            box-shadow: 0 4px 0 var(--pink);
+        }
+
+        .choice-card.fixed-item {
+            border-color: var(--turquoise);
+            background: #E8FBF9;
+        }
+
+        .swatch-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* Kad Dialog Pelanggan / Situasi */
+        .scenario-box {
+            background: linear-gradient(135deg, #FFF9E6, #FFF0F5);
+            border: 2px solid var(--gold);
+            border-radius: 18px;
+            padding: 10px 14px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Slot Koleksi Misi 7 */
+        .collection-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .slot-box {
+            background: var(--lavender-light);
+            border: 2px dashed var(--lavender-dark);
+            border-radius: 14px;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .slot-box.filled {
+            background: #E8FBF9;
+            border: 2px solid var(--turquoise);
+            color: var(--turquoise-dark);
+        }
+
+        /* ================= HALAMAN TAMAT ================= */
+        #screen-end {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cert-panel {
+            background: rgba(255, 255, 255, 0.96);
+            border: 6px double var(--gold);
+            border-radius: 30px;
+            padding: 20px 26px;
+            max-width: 740px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.16);
+        }
+
+        .badges-showcase {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .mini-badge {
+            background: linear-gradient(135deg, #FFD166, #FFA4C0);
+            color: #4A3B52;
+            font-weight: 800;
+            font-size: 0.76rem;
+            padding: 5px 12px;
+            border-radius: 16px;
+            border: 2px solid white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+        }
+
+        /* ================= MODAL MAKLUM BALAS ================= */
+        #modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(42, 27, 61, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .modal-box {
+            background: white;
+            border: 5px solid var(--pink);
+            border-radius: 28px;
+            padding: 22px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.75); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Konfeti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            z-index: 95;
+            pointer-events: none;
+            animation: fall 2.4s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(700px) rotate(720deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            #game-frame { height: 96vh; max-height: none; border-radius: 20px; }
+            .workspace-split { grid-template-columns: 1fr; grid-template-rows: 220px 1fr; }
+            .map-grid { grid-template-columns: repeat(2, 1fr); }
+            .game-logo h1 { font-size: 1.8rem; }
+            .home-designer-svg { width: 130px; height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-frame">
+    <!-- LATAR BELAKANG BUTIK FESYEN 2D CARTOON SVG -->
+    <svg id="boutique-2d-bg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
+        <!-- Jalur Dinding Pastel Butik -->
+        <defs>
+            <pattern id="wallStripes" width="80" height="80" patternUnits="userSpaceOnUse">
+                <rect width="40" height="80" fill="#FFF2F6" />
+                <rect x="40" width="40" height="80" fill="#FFF9FB" />
+            </pattern>
+        </defs>
+        <rect width="1000" height="470" fill="url(#wallStripes)" />
+        <!-- Lis Dinding Emas -->
+        <rect y="462" width="1000" height="12" fill="#FFD166" />
+        <!-- Lantai Kayu Pastel -->
+        <rect y="474" width="1000" height="226" fill="#F4DFD0" />
+        <ellipse cx="500" cy="585" rx="340" ry="65" fill="#FFE4EE" stroke="#FF8FB1" stroke-width="4" stroke-dasharray="12 8" />
+
+        <!-- Langsir & Tingkap Butik -->
+        <rect x="420" y="55" width="160" height="220" rx="80" fill="#E6F9F7" stroke="#FFD166" stroke-width="8" />
+        <path d="M415 65 Q455 150 420 275 L400 275 L400 65 Z" fill="#FF8FB1" />
+        <path d="M585 65 Q545 150 580 275 L600 275 L600 65 Z" fill="#FF8FB1" />
+
+        <!-- Rak Pakaian Kiri -->
+        <g transform="translate(55, 220)">
+            <rect x="10" y="10" width="170" height="8" rx="4" fill="#E0A82E" />
+            <rect x="15" y="10" width="8" height="245" rx="4" fill="#E0A82E" />
+            <rect x="167" y="10" width="8" height="245" rx="4" fill="#E0A82E" />
+            <rect x="5" y="250" width="180" height="10" rx="5" fill="#FFD166" />
+            <!-- Baju Tergantung -->
+            <path d="M35 18 L55 18 L68 125 L22 125 Z" fill="#FF8FB1" />
+            <path d="M75 18 L95 18 L108 135 L62 135 Z" fill="#4ECDC4" />
+            <path d="M115 18 L135 18 L148 120 L102 120 Z" fill="#C3B1E1" />
+        </g>
+
+        <!-- Almari & Rak Aksesori Kanan -->
+        <g transform="translate(765, 195)">
+            <rect x="0" y="0" width="175" height="280" rx="22" fill="#FFFDF7" stroke="#C3B1E1" stroke-width="6" />
+            <line x1="12" y1="90" x2="163" y2="90" stroke="#C3B1E1" stroke-width="5" />
+            <line x1="12" y1="180" x2="163" y2="180" stroke="#C3B1E1" stroke-width="5" />
+            <!-- Tudung & Beg Hiasan -->
+            <circle cx="52" cy="58" r="22" fill="#FF8FB1" />
+            <circle cx="118" cy="58" r="22" fill="#4ECDC4" />
+            <rect x="35" y="125" width="42" height="45" rx="10" fill="#FFD166" />
+            <rect x="98" y="130" width="42" height="40" rx="10" fill="#C3B1E1" />
+        </g>
+
+        <!-- Lampu Chandelier Comel -->
+        <line x1="500" y1="0" x2="500" y2="35" stroke="#E0A82E" stroke-width="5" />
+        <path d="M445 35 Q500 65 555 35 Z" fill="#FFD166" />
+        <circle cx="460" cy="48" r="8" fill="#FFF3B0" />
+        <circle cx="500" cy="54" r="10" fill="#FFF3B0" />
+        <circle cx="540" cy="48" r="8" fill="#FFF3B0" />
+    </svg>
+
+    <!-- HUD ATAS -->
+    <header id="hud">
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="btn-game btn-lavender" style="padding: 6px 14px; font-size: 0.85rem;" onclick="openMissionMap()">🗺️ Peta Misi</button>
+            <div class="hud-badge">
+                <span id="hud-mission-label">Butik Fesyen</span>
+            </div>
+        </div>
+
+        <div class="progress-wrapper">
+            <div class="progress-labels">
+                <span>Kemajuan 8 Misi</span>
+                <span id="progress-text">0 / 8 Selesai</span>
+            </div>
+            <div class="progress-track">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <div class="hud-badge score-badge">
+                <span>⭐</span>
+                <span id="hud-score">0</span>
+            </div>
+            <button onclick="toggleSound()" id="btn-sound" class="btn-game btn-lavender" style="padding: 6px 11px; font-size: 0.85rem;">🔊</button>
+        </div>
+    </header>
+
+    <!-- ================= 1. PAPARAN UTAMA ================= -->
+    <section id="screen-home" class="ui-layer active">
+        <div class="home-hero-row">
+            <!-- Watak Utama Pereka Muslimah 2D Cartoon -->
+            <div class="float-anim">
+                <svg class="home-designer-svg" width="190" height="240" viewBox="0 0 200 260">
+                    <!-- Bayang Lantai -->
+                    <ellipse cx="100" cy="246" rx="58" ry="11" fill="rgba(74, 59, 82, 0.14)" />
+                    <!-- Badan & Jubah Pastel Pink -->
+                    <path d="M58 135 Q100 122 142 135 L158 238 L42 238 Z" fill="#FF8FB1" stroke="#E86A92" stroke-width="3" />
+                    <!-- Lengan & Tangan Melambai -->
+                    <path d="M60 142 Q32 165 44 192" fill="none" stroke="#FF8FB1" stroke-width="18" stroke-linecap="round" />
+                    <circle cx="44" cy="194" r="9" fill="#FDE0C8" />
+                    <path d="M140 142 Q172 125 168 98" fill="none" stroke="#FF8FB1" stroke-width="18" stroke-linecap="round" />
+                    <circle cx="168" cy="95" r="9" fill="#FDE0C8" />
+                    <!-- Pita Pengukur Emas di Bahu -->
+                    <path d="M74 128 Q100 175 126 128" fill="none" stroke="#FFD166" stroke-width="7" stroke-dasharray="6 4" />
+                    <!-- Tudung Labuh Turkuois -->
+                    <path d="M52 78 C52 28, 148 28, 148 78 C154 125, 142 158, 100 164 C58 158, 46 125, 52 78 Z" fill="#4ECDC4" stroke="#2B9EB3" stroke-width="3" />
+                    <!-- Wajah Comel -->
+                    <circle cx="100" cy="84" r="34" fill="#FDE0C8" />
+                    <!-- Mata Kartun Bersinar -->
+                    <circle cx="88" cy="82" r="5" fill="#4A3B52" />
+                    <circle cx="86" cy="80" r="1.8" fill="#FFFFFF" />
+                    <circle cx="112" cy="82" r="5" fill="#4A3B52" />
+                    <circle cx="110" cy="80" r="1.8" fill="#FFFFFF" />
+                    <!-- Pipi & Senyuman -->
+                    <ellipse cx="79" cy="91" rx="6" ry="3.5" fill="#FF8FB1" opacity="0.6" />
+                    <ellipse cx="121" cy="91" rx="6" ry="3.5" fill="#FF8FB1" opacity="0.6" />
+                    <path d="M92 94 Q100 103 108 94" fill="none" stroke="#E86A92" stroke-width="3" stroke-linecap="round" />
+                    <!-- Brooch Bunga Emas -->
+                    <circle cx="100" cy="134" r="6" fill="#FFD166" stroke="#FFFFFF" stroke-width="2" />
+                </svg>
+            </div>
+
+            <div class="home-card">
+                <div class="badge-2d">✨ PENDIDIKAN ISLAM TAHUN 4 • TUTUPLAH AURATMU ✨</div>
+                <div class="game-logo">
+                    <h1>MODEST QUEST</h1>
+                    <h3 style="color: var(--turquoise-dark); letter-spacing: 2px; margin-top: 2px;">FASHION STUDIO</h3>
+                </div>
+                <p style="font-weight: 700; color: var(--text-muted); font-size: 0.92rem; margin: 12px 0 18px;">
+                    Bantu pereka Muslimah menguruskan butik fesyen dan menyiapkan 8 misi busana patuh syarak!
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+                    <button class="btn-game btn-pink" style="font-size: 1.1rem; padding: 12px 30px;" onclick="startGame()">
+                        ▶ MULA BERMAIN
+                    </button>
+                    <button class="btn-game btn-turquoise" onclick="showHowToPlay()">
+                        💡 CARA BERMAIN
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= 2. PETA 8 MISI ================= -->
+    <section id="screen-map" class="ui-layer">
+        <div class="map-board">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div>
+                    <h2 style="color: var(--pink-dark); font-size: 1.45rem;">🗺️ Peta Cabaran Butik (8 Misi)</h2>
+                    <p style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Pilih misi yang terbuka untuk mula beraksi di studio fesyen!</p>
+                </div>
+                <button id="btn-claim-cert" class="btn-game btn-gold" style="display: none;" onclick="showEndScreen()">
+                    🏆 SIJIL TAMAT PERMAINAN
+                </button>
+            </div>
+
+            <div class="map-grid" id="mission-map-grid">
+                <!-- Dijana secara dinamik oleh JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= 3. RUANG KERJA AKTIF (MISI 1 HINGGA 8) ================= -->
+    <section id="screen-mission" class="ui-layer">
+        <div class="mission-header-bar">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="m-badge-num" style="background: var(--pink); color: white; font-family: 'Fredoka'; padding: 4px 12px; border-radius: 12px; font-size: 0.82rem;">MISI 1</span>
+                <div>
+                    <h3 id="m-title" style="font-size: 1.05rem;">Tajuk Misi</h3>
+                    <p id="m-instruction" style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">Arahan ringkas</p>
+                </div>
+            </div>
+            <button id="m-primary-btn" class="btn-game btn-gold" onclick="submitCurrentMission()">✨ SEMAK</button>
+        </div>
+
+        <div class="workspace-split">
+            <!-- Ruang Kiri: Patung Peragaan 2D Cartoon -->
+            <div class="stage-2d-viewport" id="stage-2d-box">
+                <div class="stage-floating-tag" id="stage-2d-label">🪞 Patung Peragaan Butik</div>
+
+                <div class="mannequin-svg-wrap" id="mannequin-2d-container">
+                    <!-- Patung Peragaan 2D SVG akan dikemas kini secara dinamik -->
+                </div>
+
+                <div class="stage-floating-tag" id="stage-2d-feedback" style="background: #FFF0F5; border-color: var(--pink); color: var(--pink-dark);">
+                    Klik pilihan di kanan untuk menggayakan patung!
+                </div>
+            </div>
+
+            <!-- Panel Kawalan Sebelah Kanan -->
+            <div class="control-panel" id="mission-controls-area">
+                <!-- Kandungan dinamik mengikut Misi 1 - 8 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ================= 4. HALAMAN TAMAT ================= -->
+    <section id="screen-end" class="ui-layer">
+        <div class="cert-panel">
+            <div style="font-size: 2.5rem; margin-bottom: 4px;">👑🏅🎉</div>
+            <h2 style="color: var(--pink-dark); font-size: 1.65rem;">Tahniah! Pereka Fesyen Muslimah Cemerlang!</h2>
+            <p style="font-weight: 700; color: var(--text-muted); font-size: 0.9rem;">Kesemua 8 misi butik telah berjaya disempurnakan dengan cemerlang.</p>
+
+            <div style="background: #FFF9E6; border: 3px solid var(--gold); border-radius: 20px; padding: 8px 20px; margin: 10px auto; display: inline-block;">
+                <span style="font-weight: 700;">JUMLAH MARKAH: </span>
+                <span id="final-score-val" class="game-font" style="font-size: 1.6rem; color: #D98A00;">800</span>
+                <span style="font-weight: 700;"> MATA</span>
+            </div>
+
+            <div class="badges-showcase" id="earned-badges-list">
+                <!-- Lencana dikumpul -->
+            </div>
+
+            <div style="background: var(--lavender-light); border: 2px solid var(--lavender); border-radius: 18px; padding: 12px 16px; text-align: left; margin: 10px 0; font-size: 0.85rem; font-weight: 700;">
+                <div style="font-family: 'Fredoka'; color: var(--lavender-dark); margin-bottom: 4px;">📌 Rumusan Pakaian Menepati Syarak:</div>
+                <div>✅ Menutup aurat dengan sempurna (seluruh tubuh kecuali muka & tapak tangan).</div>
+                <div>✅ Longgar, tidak ketat dan tidak menampakkan bentuk badan.</div>
+                <div>✅ Fabrik tebal, tidak jarang dan sesuai dengan aktiviti harian.</div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: center; margin-top: 8px;">
+                <button class="btn-game btn-turquoise" onclick="openMissionMap()">🗺️ LIHAT PETA MISI</button>
+                <button class="btn-game btn-pink" onclick="restartFullGame()">🔄 MAIN SEMULA</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- MODAL MAKLUM BALAS -->
+<div id="modal-overlay">
+    <div class="modal-box">
+        <div id="modal-icon" style="font-size: 3rem; margin-bottom: 6px;">🌟</div>
+        <h3 id="modal-title" style="font-size: 1.35rem; margin-bottom: 8px;">Tajuk</h3>
+        <p id="modal-desc" style="font-size: 0.94rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; white-space: pre-line;">Mesej</p>
+        <div id="modal-actions" style="display: flex; gap: 10px; justify-content: center;"></div>
+    </div>
+</div>
+
+<script>
+/* ============================================================================
+   1. ENJIN BUNYI SINTETIK (TONE.JS)
+============================================================================ */
+let soundEnabled = true;
+let synth = null;
+
+function initAudio() {
+    if (!synth && typeof Tone !== 'undefined') {
+        Tone.start();
+        synth = new Tone.PolySynth(Tone.Synth).toDestination();
+        synth.volume.value = -9;
+    }
+}
+
+function playSound(type) {
+    if (!soundEnabled) return;
+    try {
+        initAudio();
+        if (!synth) return;
+        const now = Tone.now();
+        if (type === 'click') synth.triggerAttackRelease("C5", "32n", now);
+        else if (type === 'wear') synth.triggerAttackRelease(["E5", "G5"], "16n", now);
+        else if (type === 'success') {
+            synth.triggerAttackRelease("C5", "16n", now);
+            synth.triggerAttackRelease("E5", "16n", now + 0.09);
+            synth.triggerAttackRelease("G5", "16n", now + 0.18);
+            synth.triggerAttackRelease("C6", "8n", now + 0.27);
+        } else if (type === 'error') {
+            synth.triggerAttackRelease("E4", "16n", now);
+            synth.triggerAttackRelease("C4", "8n", now + 0.12);
+        }
+    } catch (e) {}
+}
+
+function toggleSound() {
+    soundEnabled = !soundEnabled;
+    document.getElementById('btn-sound').innerText = soundEnabled ? '🔊' : '🔇';
+}
+
+/* ============================================================================
+   2. ENJIN ILUSTRASI 2D CARTOON PATUNG PERAGAAN & PAKAIAN
+============================================================================ */
+function render2DMannequin(outfit, isRunway = false) {
+    const container = document.getElementById('mannequin-2d-container');
+    const stageBox = document.getElementById('stage-2d-box');
+    if (isRunway) stageBox.classList.add('runway-mode');
+    else stageBox.classList.remove('runway-mode');
+
+    const t = outfit.tudung || { color: '#EFE8FA', style: 'none' };
+    const b = outfit.baju || { color: '#F4F0FA', style: 'longgar' };
+    const k = outfit.bawah || { color: '#E2D9F3', style: 'skirt_labuh' };
+    const s = outfit.kasut || { color: '#E86A92', style: 'bertutup' };
+
+    // Kawalan ketelusan fabrik jarang
+    const topOpacity = (b.style === 'jarang') ? '0.45' : '1';
+
+    // Lapisan Bawah (Skirt Labuh, Palazzo, Ketat Singkat, Skirt Ketat)
+    let bottomSVG = '';
+    if (k.style === 'palazzo') {
+        bottomSVG = `
+            <path d="M84 185 L106 185 L108 292 L80 292 Z" fill="${k.color}" stroke="#4A3B52" stroke-width="2.5" />
+            <path d="M114 185 L136 185 L140 292 L112 292 Z" fill="${k.color}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    } else if (k.style === 'ketat_singkat') {
+        bottomSVG = `
+            <!-- Betis terdedah -->
+            <rect x="90" y="235" width="12" height="58" rx="5" fill="#FDE0C8" />
+            <rect x="118" y="235" width="12" height="58" rx="5" fill="#FDE0C8" />
+            <!-- Seluar ketat paras betis -->
+            <path d="M88 185 L106 185 L103 245 L89 245 Z" fill="${k.color}" stroke="#4A3B52" stroke-width="2.5" />
+            <path d="M114 185 L132 185 L131 245 L117 245 Z" fill="${k.color}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    } else if (k.style === 'ketat_skirt') {
+        bottomSVG = `
+            <rect x="92" y="255" width="11" height="38" fill="#FDE0C8" />
+            <rect x="117" y="255" width="11" height="38" fill="#FDE0C8" />
+            <path d="M88 185 L132 185 L128 262 L92 262 Z" fill="${k.color}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    } else {
+        // Skirt labuh kembang sopan
+        bottomSVG = `
+            <path d="M84 185 L136 185 L154 294 L66 294 Z" fill="${k.color}" stroke="#4A3B52" stroke-width="2.5" />
+            <line x1="98" y1="190" x2="90" y2="292" stroke="rgba(255,255,255,0.35)" stroke-width="3" />
+            <line x1="122" y1="190" x2="130" y2="292" stroke="rgba(255,255,255,0.35)" stroke-width="3" />
+        `;
+    }
+
+    // Lapisan Baju & Lengan
+    let topSVG = '';
+    if (b.style === 'ketat_pendek') {
+        topSVG = `
+            <!-- Lengan kulit terdedah -->
+            <path d="M86 116 L62 178" stroke="#FDE0C8" stroke-width="11" stroke-linecap="round" />
+            <path d="M134 116 L158 178" stroke="#FDE0C8" stroke-width="11" stroke-linecap="round" />
+            <!-- Baju ketat lengan pendek -->
+            <path d="M86 110 L134 110 L128 190 L92 190 Z" fill="${b.color}" stroke="#4A3B52" stroke-width="2.5" />
+            <path d="M86 112 L72 138 L83 143 L90 124 Z" fill="${b.color}" stroke="#4A3B52" stroke-width="2" />
+            <path d="M134 112 L148 138 L137 143 L130 124 Z" fill="${b.color}" stroke="#4A3B52" stroke-width="2" />
+        `;
+    } else if (b.style === 'ketat') {
+        topSVG = `
+            <path d="M86 112 L62 178" stroke="${b.color}" stroke-width="12" stroke-linecap="round" />
+            <path d="M134 112 L158 178" stroke="${b.color}" stroke-width="12" stroke-linecap="round" />
+            <path d="M86 110 L134 110 L127 192 L93 192 Z" fill="${b.color}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    } else {
+        // Baju longgar & berlengan panjang (atau jarang jika opacity 0.45)
+        topSVG = `
+            <!-- Garis badan dalam (akan kelihatan jika kain jarang) -->
+            <path d="M90 115 L130 115 L126 190 L94 190 Z" fill="#FDE0C8" opacity="0.65" />
+            <path d="M82 114 L58 180" stroke="${b.color}" stroke-opacity="${topOpacity}" stroke-width="16" stroke-linecap="round" />
+            <path d="M138 114 L162 180" stroke="${b.color}" stroke-opacity="${topOpacity}" stroke-width="16" stroke-linecap="round" />
+            <path d="M80 108 L140 108 L146 196 L74 196 Z" fill="${b.color}" fill-opacity="${topOpacity}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    }
+
+    // Lapisan Tudung (Labuh / Singkat / Tiada)
+    let hijabSVG = '';
+    if (t.style === 'labuh') {
+        hijabSVG = `
+            <path d="M72 64 C72 24, 148 24, 148 64 C154 106, 144 138, 110 144 C76 138, 66 106, 72 64 Z" fill="${t.color}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    } else if (t.style === 'singkat') {
+        hijabSVG = `
+            <!-- Leher & dada atas terdedah -->
+            <rect x="101" y="94" width="18" height="18" rx="6" fill="#FDE0C8" />
+            <path d="M76 62 C76 26, 144 26, 144 62 C144 86, 134 96, 110 96 C86 96, 76 86, 76 62 Z" fill="${t.color}" stroke="#4A3B52" stroke-width="2.5" />
+        `;
+    } else {
+        hijabSVG = `
+            <!-- Rambut / Kepala Patung Belum Bertudung -->
+            <path d="M78 60 C78 28, 142 28, 142 60 L142 86 L78 86 Z" fill="#6E5041" />
+            <rect x="102" y="92" width="16" height="18" fill="#FDE0C8" />
+        `;
+    }
+
+    // Lapisan Kasut (Bertutup / Sandal Terbuka)
+    let shoeSVG = '';
+    if (s.style === 'bertutup') {
+        shoeSVG = `
+            <rect x="83" y="292" width="22" height="14" rx="7" fill="${s.color}" stroke="#4A3B52" stroke-width="2" />
+            <rect x="115" y="292" width="22" height="14" rx="7" fill="${s.color}" stroke="#4A3B52" stroke-width="2" />
+        `;
+    } else {
+        shoeSVG = `
+            <rect x="85" y="293" width="20" height="11" rx="5" fill="#FDE0C8" stroke="#4A3B52" stroke-width="1.5" />
+            <rect x="115" y="293" width="20" height="11" rx="5" fill="#FDE0C8" stroke="#4A3B52" stroke-width="1.5" />
+            <rect x="84" y="301" width="22" height="5" rx="2" fill="${s.color}" />
+            <rect x="114" y="301" width="22" height="5" rx="2" fill="${s.color}" />
+        `;
+    }
+
+    // Lampu Pentas & Penonton Kartun jika mod Pentas Peragaan
+    const runwayDecor = isRunway ? `
+        <polygon points="40,0 110,220 10,220" fill="rgba(255, 243, 176, 0.22)" />
+        <polygon points="180,0 210,220 110,220" fill="rgba(255, 243, 176, 0.22)" />
+        <ellipse cx="110" cy="308" rx="85" ry="14" fill="#FFD166" stroke="#E0A82E" stroke-width="3" />
+    ` : `
+        <ellipse cx="110" cy="308" rx="68" ry="11" fill="#FFD166" stroke="#E0A82E" stroke-width="2.5" />
+    `;
+
+    container.innerHTML = `
+        <svg viewBox="0 0 220 325" style="height: 100%; max-height: 295px; width: auto; overflow: visible;">
+            ${runwayDecor}
+            <!-- Tangan Patung -->
+            <circle cx="57" cy="182" r="7.5" fill="#FDE0C8" stroke="#4A3B52" stroke-width="1.5" />
+            <circle cx="163" cy="182" r="7.5" fill="#FDE0C8" stroke="#4A3B52" stroke-width="1.5" />
+
+            <!-- Kasut & Bahagian Bawah -->
+            ${shoeSVG}
+            ${bottomSVG}
+
+            <!-- Baju -->
+            ${topSVG}
+
+            <!-- Tudung & Wajah Patung Comel -->
+            ${hijabSVG}
+            <circle cx="110" cy="68" r="26" fill="#FDE0C8" />
+            <circle cx="101" cy="66" r="3.6" fill="#4A3B52" />
+            <circle cx="119" cy="66" r="3.6" fill="#4A3B52" />
+            <ellipse cx="94" cy="73" rx="4.5" ry="2.5" fill="#FF8FB1" opacity="0.65" />
+            <ellipse cx="126" cy="73" rx="4.5" ry="2.5" fill="#FF8FB1" opacity="0.65" />
+            <path d="M104 76 Q110 82 116 76" fill="none" stroke="#E86A92" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+    `;
+}
+
+/* ============================================================================
+   3. DATA & KONFIGURASI 8 MISI LENGKAP
+============================================================================ */
+const missionsMeta = [
+    { id: 1, title: 'Design Your Outfit', icon: '👗', badge: 'Pereka Muda', desc: 'Reka set pakaian lengkap (tudung, baju, kain/seluar & kasut) yang menutup aurat.' },
+    { id: 2, title: 'Fashion Inspector', icon: '🔍', badge: 'Pemeriksa Teliti', desc: 'Periksa 3 rekaan butik dan baiki bahagian yang ketat, jarang atau singkat.' },
+    { id: 3, title: 'Fashion Show', icon: '🌟', badge: 'Bintang Pentas', desc: 'Pilih koleksi terbaik untuk pertunjukan fesyen patuh syarak.' },
+    { id: 4, title: 'Styling Challenge', icon: '🏃‍♀️', badge: 'Pakar Gaya Situasi', desc: 'Padankan pakaian sopan mengikut 3 situasi: Sukan, Sekolah & Majlis.' },
+    { id: 5, title: 'Fashion Rescue', icon: '🪡', badge: 'Penyelamat Busana', desc: 'Selamatkan 3 busana rosak dengan menukar fabrik jarang dan potongan ketat.' },
+    { id: 6, title: 'Customer Request', icon: '🛍️', badge: 'Perunding Butik', desc: 'Penuhi permintaan 3 pelanggan butik sambil menjaga tuntutan syarak.' },
+    { id: 7, title: 'Fashion Collection', icon: '📚', badge: 'Kurator Koleksi', desc: 'Bina 3 kombinasi koleksi busana Muslimah bertema Pastel Harmoni.' },
+    { id: 8, title: 'Grand Fashion Show', icon: '👑', badge: 'Grand Master Modest', desc: 'Pentas akhir! Persembahkan koleksi akhir & nilai ciri patuh syarak bersama juri.' }
+];
+
+const gameState = {
+    score: 0,
+    unlockedUpTo: 1,
+    completed: [false, false, false, false, false, false, false, false],
+    activeMission: null,
+    m1: { tab: 'tudung', outfit: { tudung: null, baju: null, bawah: null, kasut: null } },
+    m2: { activeIdx: 0, fixed: [false, false, false] },
+    m3: { selected: 0 },
+    m4: { step: 0, selectedOutfit: 0 },
+    m5: { step: 0, fixedSteps: [false, false, false] },
+    m6: { clientIdx: 0, chosen: 0 },
+    m7: { tab: 'tudung', currentDraft: { tudung: null, baju: null, bawah: null, kasut: null }, savedCombos: [] },
+    m8: { selectedComboIdx: 0, checks: [false, false, false] }
+};
+
+const itemsDB = {
+    tudung: [
+        { id: 't1', name: 'Shawl Labuh Rose', color: '#FF8FB1', style: 'labuh', valid: true, msg: 'Menutup dada dengan sempurna.' },
+        { id: 't2', name: 'Tudung Singkat Leher', color: '#FFD166', style: 'singkat', valid: false, msg: 'Terlalu singkat dan mendedahkan dada.' },
+        { id: 't3', name: 'Bawal Turkuois Labuh', color: '#4ECDC4', style: 'labuh', valid: true, msg: 'Labuh, sopan dan kemas.' }
+    ],
+    baju: [
+        { id: 'b1', name: 'Baju Kurung Longgar', color: '#C3B1E1', style: 'longgar', valid: true, msg: 'Potongan longgar & berlengan panjang.' },
+        { id: 'b2', name: 'Blouse Lengan Pendek', color: '#FF6B6B', style: 'ketat_pendek', valid: false, msg: 'Ketat dan mendedahkan lengan.' },
+        { id: 'b3', name: 'Kemeja Chiffon Jarang', color: '#FFB6C1', style: 'jarang', valid: false, msg: 'Fabrik terlalu jarang dan nipis.' }
+    ],
+    bawah: [
+        { id: 'k1', name: 'Skirt Labuh Kembang', color: '#8E7AB5', style: 'skirt_labuh', valid: true, msg: 'Labuh hingga ke buku lali.' },
+        { id: 'k2', name: 'Seluar Palazzo Longgar', color: '#2B9EB3', style: 'palazzo', valid: true, msg: 'Longgar dan tidak mengikut bentuk kaki.' },
+        { id: 'k3', name: 'Seluar Ketat Paras Betis', color: '#4A3B52', style: 'ketat_singkat', valid: false, msg: 'Ketat dan mendedahkan betis.' }
+    ],
+    kasut: [
+        { id: 's1', name: 'Kasut Bertutup Penuh', color: '#E86A92', style: 'bertutup', valid: true, msg: 'Menutup aurat kaki dengan sempurna.' },
+        { id: 's2', name: 'Sandal Terbuka', color: '#D4A373', style: 'terbuka', valid: false, msg: 'Mendedahkan bahagian atas kaki.' },
+        { id: 's3', name: 'Sneakers Sukan Sopan', color: '#FFFFFF', style: 'bertutup', valid: true, msg: 'Sesuai & menutup kaki.' }
+    ]
+};
+
+/* ============================================================================
+   4. NAVIGASI SKRIN, HUD & PETA MISI
+============================================================================ */
+function showLayer(id) {
+    document.querySelectorAll('.ui-layer').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function updateHUD() {
+    const completedCount = gameState.completed.filter(Boolean).length;
+    document.getElementById('hud-score').innerText = gameState.score;
+    document.getElementById('progress-text').innerText = `${completedCount} / 8 Selesai`;
+    document.getElementById('progress-fill').style.width = `${(completedCount / 8) * 100}%`;
+}
+
+function showHowToPlay() {
+    playSound('click');
+    openModal(
+        '💡',
+        'Panduan Modest Quest',
+        '• Selesaikan Misi 1 hingga Misi 8 secara berperingkat.\n• Klik pilihan pakaian untuk melihat perubahan pada patung peragaan butik.\n• Setiap pilihan pakaian mestilah menutup aurat, longgar, dan tidak jarang!',
+        `<button class="btn-game btn-pink" onclick="closeModal()">FAHAM!</button>`
+    );
+}
+
+function startGame() {
+    playSound('success');
+    document.getElementById('hud').style.display = 'flex';
+    updateHUD();
+    openMissionMap();
+}
+
+function openMissionMap() {
+    playSound('click');
+    document.getElementById('hud-mission-label').innerText = 'Peta Butik';
+    updateHUD();
+
+    const completedCount = gameState.completed.filter(Boolean).length;
+    document.getElementById('btn-claim-cert').style.display = (completedCount === 8) ? 'inline-flex' : 'none';
+
+    const grid = document.getElementById('mission-map-grid');
+    grid.innerHTML = missionsMeta.map((m, idx) => {
+        const isDone = gameState.completed[idx];
+        const isUnlocked = m.id <= gameState.unlockedUpTo;
+        const isPlaying = gameState.activeMission === m.id && !isDone;
+        let cls = 'locked', statusText = '🔒 Belum Dibuka', pillCls = 'status-locked';
+        if (isDone) {
+            cls = 'completed'; statusText = '✅ Selesai'; pillCls = 'status-completed';
+        } else if (isPlaying) {
+            cls = 'unlocked'; statusText = '🎮 Sedang Dimainkan'; pillCls = 'status-playing';
+        } else if (isUnlocked) {
+            cls = 'unlocked'; statusText = '▶ Sedang Dimainkan'; pillCls = 'status-unlocked';
+        }
+
+        return `
+            <div class="mission-node ${cls}" onclick="${isUnlocked ? `launchMission(${m.id})` : ''}">
+                <span class="status-pill ${pillCls}">${statusText}</span>
+                <div style="font-size: 1.9rem;">${m.icon}</div>
+                <div class="game-font" style="font-size: 0.92rem; line-height: 1.15;">Misi ${m.id}: ${m.title}</div>
+                <p style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">${m.desc}</p>
+            </div>
+        `;
+    }).join('');
+
+    showLayer('screen-map');
+}
+
+function completeMissionSuccess(missionId, bonusPoints, message) {
+    playSound('success');
+    launchConfetti();
+    const idx = missionId - 1;
+    if (!gameState.completed[idx]) {
+        gameState.completed[idx] = true;
+        gameState.score += bonusPoints;
+    }
+    if (missionId < 8 && gameState.unlockedUpTo <= missionId) {
+        gameState.unlockedUpTo = missionId + 1;
+    }
+    updateHUD();
+
+    const nextBtn = missionId < 8
+        ? `<button class="btn-game btn-pink" onclick="closeModal(); launchMission(${missionId + 1})">MISI ${missionId + 1} ➔</button>`
+        : `<button class="btn-game btn-gold" onclick="closeModal(); showEndScreen()">🏆 SIJIL TAMAT</button>`;
+
+    openModal(
+        '🌟',
+        `Misi ${missionId} Selesai! (+${bonusPoints} Mata)`,
+        `${message}\n\n🏅 Lencana Diperoleh: ${missionsMeta[idx].badge}`,
+        `<button class="btn-game btn-lavender" onclick="closeModal(); openMissionMap()">🗺️ PETA</button>${nextBtn}`
+    );
+}
+
+/* ============================================================================
+   5. PENGURUSAN AKTIVITI INTERAKTIF SETIAP MISI (1 HINGGA 8)
+============================================================================ */
+function launchMission(id) {
+    playSound('click');
+    gameState.activeMission = id;
+    const meta = missionsMeta[id - 1];
+
+    document.getElementById('hud-mission-label').innerText = `Misi ${id} / 8`;
+    document.getElementById('m-badge-num').innerText = `MISI ${id}`;
+    document.getElementById('m-title').innerText = meta.title;
+    document.getElementById('m-instruction').innerText = meta.desc;
+
+    showLayer('screen-mission');
+
+    if (id === 1) setupMission1();
+    else if (id === 2) setupMission2();
+    else if (id === 3) setupMission3();
+    else if (id === 4) setupMission4();
+    else if (id === 5) setupMission5();
+    else if (id === 6) setupMission6();
+    else if (id === 7) setupMission7();
+    else if (id === 8) setupMission8();
+}
+
+/* -------------------- MISI 1: DESIGN YOUR OUTFIT -------------------- */
+function setupMission1() {
+    document.getElementById('m-primary-btn').innerText = '✨ SEMAK REKAAN';
+    document.getElementById('stage-2d-label').innerText = '🪞 Patung Studio Butik';
+    render2DMannequin(gameState.m1.outfit, false);
+    renderM1Controls();
+}
+
+function renderM1Controls() {
+    const area = document.getElementById('mission-controls-area');
+    const tab = gameState.m1.tab;
+    area.innerHTML = `
+        <div class="tabs-row">
+            <button class="tab-btn ${tab==='tudung'?'active':''}" onclick="gameState.m1.tab='tudung'; renderM1Controls()">🧕<span>Tudung</span></button>
+            <button class="tab-btn ${tab==='baju'?'active':''}" onclick="gameState.m1.tab='baju'; renderM1Controls()">👚<span>Baju</span></button>
+            <button class="tab-btn ${tab==='bawah'?'active':''}" onclick="gameState.m1.tab='bawah'; renderM1Controls()">👗<span>Bawah</span></button>
+            <button class="tab-btn ${tab==='kasut'?'active':''}" onclick="gameState.m1.tab='kasut'; renderM1Controls()">🥿<span>Kasut</span></button>
+        </div>
+        <div class="cards-grid">
+            ${itemsDB[tab].map((item, i) => {
+                const sel = gameState.m1.outfit[tab]?.id === item.id;
+                return `<div class="choice-card ${sel?'selected':''}" onclick="pickM1Item('${tab}', ${i})">
+                    <div class="swatch-circle" style="background:${item.color}">✨</div>
+                    <strong style="font-size:0.8rem;">${item.name}</strong>
+                </div>`;
+            }).join('')}
+        </div>
+    `;
+}
+
+function pickM1Item(cat, idx) {
+    playSound('wear');
+    gameState.m1.outfit[cat] = itemsDB[cat][idx];
+    render2DMannequin(gameState.m1.outfit, false);
+    document.getElementById('stage-2d-feedback').innerText = `Dipakai: ${itemsDB[cat][idx].name}`;
+    renderM1Controls();
+}
+
+/* -------------------- MISI 2: FASHION INSPECTOR -------------------- */
+const m2Cases = [
+    {
+        name: 'Patung A: Gaun Petang',
+        issuePart: 'baju',
+        issueText: 'Baju terlalu ketat menampakkan bentuk badan!',
+        before: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#FF6B6B', style: 'ketat' }, bawah: { color: '#FF6B6B', style: 'ketat_skirt' }, kasut: { color: '#E86A92', style: 'bertutup' } },
+        after: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } }
+    },
+    {
+        name: 'Patung B: Busana Pastel',
+        issuePart: 'baju',
+        issueText: 'Fabrik baju terlalu jarang dan nipis!',
+        before: { tudung: { color: '#4ECDC4', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'jarang' }, bawah: { color: '#2B9EB3', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } },
+        after: { tudung: { color: '#4ECDC4', style: 'labuh' }, baju: { color: '#4ECDC4', style: 'longgar' }, bawah: { color: '#2B9EB3', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } }
+    },
+    {
+        name: 'Patung C: Gaya Santai',
+        issuePart: 'tudung',
+        issueText: 'Tudung terlalu singkat dan tidak menutup dada!',
+        before: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#FFA4C0', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } },
+        after: { tudung: { color: '#FFD166', style: 'labuh' }, baju: { color: '#FFA4C0', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } }
+    }
+];
+
+function setupMission2() {
+    document.getElementById('m-primary-btn').innerText = '✅ SELESAIKAN PEMERIKSAAN';
+    renderM2Controls();
+}
+
+function renderM2Controls() {
+    const idx = gameState.m2.activeIdx;
+    const currentCase = m2Cases[idx];
+    const isFixed = gameState.m2.fixed[idx];
+    render2DMannequin(isFixed ? currentCase.after : currentCase.before, false);
+    document.getElementById('stage-2d-label').innerText = `🔍 Memeriksa: ${currentCase.name}`;
+    document.getElementById('stage-2d-feedback').innerText = isFixed ? '✅ Rekaan telah dibaiki!' : '⚠️ Periksa bahagian pakaian bermasalah!';
+
+    const area = document.getElementById('mission-controls-area');
+    area.innerHTML = `
+        <div class="tabs-row" style="grid-template-columns: repeat(3, 1fr);">
+            ${m2Cases.map((c, i) => `
+                <button class="tab-btn ${idx===i?'active':''}" onclick="gameState.m2.activeIdx=${i}; renderM2Controls()">
+                    ${gameState.m2.fixed[i] ? '✅' : '🔍'}<span>Patung ${i+1}</span>
+                </button>
+            `).join('')}
+        </div>
+        <div class="scenario-box">
+            ${isFixed
+                ? `🎉 Syabas! ${currentCase.name} telah dibaiki menjadi patuh syarak.`
+                : `🧐 Klik pada bahagian pakaian ${currentCase.name} yang mempunyai masalah aurat:`}
+        </div>
+        <div class="cards-grid">
+            <div class="choice-card ${isFixed && currentCase.issuePart==='tudung' ? 'fixed-item' : ''}" onclick="checkM2Part('tudung')">
+                <span style="font-size:1.5rem;">🧕</span><strong style="font-size:0.82rem;">Periksa Tudung</strong>
+            </div>
+            <div class="choice-card ${isFixed && currentCase.issuePart==='baju' ? 'fixed-item' : ''}" onclick="checkM2Part('baju')">
+                <span style="font-size:1.5rem;">👚</span><strong style="font-size:0.82rem;">Periksa Baju</strong>
+            </div>
+            <div class="choice-card" onclick="checkM2Part('bawah')">
+                <span style="font-size:1.5rem;">👗</span><strong style="font-size:0.82rem;">Periksa Kain/Seluar</strong>
+            </div>
+        </div>
+    `;
+}
+
+function checkM2Part(part) {
+    const idx = gameState.m2.activeIdx;
+    if (gameState.m2.fixed[idx]) return;
+    const c = m2Cases[idx];
+    if (part === c.issuePart) {
+        playSound('success');
+        gameState.m2.fixed[idx] = true;
+        renderM2Controls();
+        openModal('🛠️', 'Masalah Dikesan & Dibaiki!', `${c.issueText}\n\nRekaan pakaian telah dikemas kini dengan potongan yang lebih sopan dan menutup aurat.`);
+    } else {
+        playSound('error');
+        openModal('🤔', 'Bahagian Ini Sudah Baik', 'Bahagian tersebut sudah menutup aurat dengan baik. Cuba periksa bahagian lain pada patung ini!');
+    }
+}
+
+/* -------------------- MISI 3: FASHION SHOW -------------------- */
+const m3Collections = [
+    { name: 'Koleksi Glam Singkat', valid: false, reason: 'Tudung singkat dan seluar ketat paras betis tidak menutup aurat.', outfit: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#FF8FB1', style: 'longgar' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } } },
+    { name: 'Koleksi Anggun Syariah', valid: true, reason: 'Menutup seluruh aurat, longgar, tidak jarang dan menepati tuntutan syarak!', outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+    { name: 'Koleksi Chiffon Nipis', valid: false, reason: 'Baju chiffon jarang menampakkan kulit lengan.', outfit: { tudung: { color: '#4ECDC4', style: 'labuh' }, baju: { color: '#4ECDC4', style: 'jarang' }, bawah: { color: '#2B9EB3', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } }
+];
+
+function setupMission3() {
+    document.getElementById('m-primary-btn').innerText = '🌟 PENTASKAN KOLEKSI';
+    renderM3Controls();
+}
+
+function renderM3Controls() {
+    const sel = gameState.m3.selected;
+    render2DMannequin(m3Collections[sel].outfit, true);
+    document.getElementById('stage-2d-label').innerText = '🌟 Pentas Peragaan Fesyen';
+    document.getElementById('stage-2d-feedback').innerText = `Dipilih: ${m3Collections[sel].name}`;
+
+    document.getElementById('mission-controls-area').innerHTML = `
+        <div class="scenario-box">🎤 Pilih 1 koleksi untuk dipersembahkan di atas pentas pertunjukan fesyen:</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            ${m3Collections.map((col, i) => `
+                <div class="choice-card ${sel===i?'selected':''}" style="flex-direction:row; justify-content:space-between; padding:12px 16px;" onclick="playSound('wear'); gameState.m3.selected=${i}; renderM3Controls()">
+                    <strong>${col.name}</strong>
+                    <span style="font-size:0.78rem; color:var(--lavender-dark);">Klik untuk pratonton ➔</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+/* -------------------- MISI 4: STYLING CHALLENGE (SITUASI) -------------------- */
+const m4Scenarios = [
+    {
+        situation: 'Situasi 1: Hari Sukan Sekolah 🏃‍♀️',
+        hint: 'Pilih pakaian sukan yang longgar, menyerap peluh, tudung kemas dan kasut sukan bertutup.',
+        options: [
+            { name: 'Tracksuit Longgar + Tudung Labuh', valid: true, outfit: { tudung: { color: '#4ECDC4', style: 'labuh' }, baju: { color: '#4ECDC4', style: 'longgar' }, bawah: { color: '#2B9EB3', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+            { name: 'Baju Sukan Lengan Pendek Ketat', valid: false, outfit: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#FF6B6B', style: 'ketat_pendek' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } }
+        ]
+    },
+    {
+        situation: 'Situasi 2: Menghadiri Majlis Kenduri 🎉',
+        hint: 'Pilih busana majlis yang sopan, tidak jarang dan menutup aurat.',
+        options: [
+            { name: 'Gaun Chiffon Jarang', valid: false, outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#FF8FB1', style: 'jarang' }, bawah: { color: '#FF8FB1', style: 'ketat_skirt' }, kasut: { color: '#D4A373', style: 'terbuka' } } },
+            { name: 'Baju Kurung Pastel + Skirt Labuh', valid: true, outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } } }
+        ]
+    },
+    {
+        situation: 'Situasi 3: Ke Sekolah Menuntut Ilmu 🎒',
+        hint: 'Pilih pakaian seragam/sopan yang kemas, bertudung labuh dan berkasut bertutup.',
+        options: [
+            { name: 'Baju Kurung Putih & Kain Labuh', valid: true, outfit: { tudung: { color: '#FFFFFF', style: 'labuh' }, baju: { color: '#FFFFFF', style: 'longgar' }, bawah: { color: '#4ECDC4', style: 'skirt_labuh' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+            { name: 'Blouse Ketat & Sandal Terbuka', valid: false, outfit: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#FF6B6B', style: 'ketat' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } } }
+        ]
+    }
+];
+
+function setupMission4() {
+    document.getElementById('m-primary-btn').innerText = '✔ SAHKAN PILIHAN SITUASI';
+    gameState.m4.selectedOutfit = 0;
+    renderM4Controls();
+}
+
+function renderM4Controls() {
+    const sc = m4Scenarios[gameState.m4.step];
+    const sel = gameState.m4.selectedOutfit;
+    render2DMannequin(sc.options[sel].outfit, false);
+    document.getElementById('stage-2d-label').innerText = `Situasi ${gameState.m4.step + 1} / 3`;
+
+    document.getElementById('mission-controls-area').innerHTML = `
+        <div class="scenario-box">
+            <strong>${sc.situation}</strong><br>
+            <span style="font-size:0.8rem; color:var(--text-muted);">${sc.hint}</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            ${sc.options.map((opt, i) => `
+                <div class="choice-card ${sel===i?'selected':''}" style="flex-direction:row; justify-content:space-between; padding:12px;" onclick="playSound('wear'); gameState.m4.selectedOutfit=${i}; renderM4Controls()">
+                    <strong>${opt.name}</strong>
+                    <span>👕 Lihat Patung</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+/* -------------------- MISI 5: FASHION RESCUE -------------------- */
+const m5RescueSteps = [
+    {
+        title: 'Langkah 1: Ganti Fabrik Jarang',
+        desc: 'Busana pelanggan ini menggunakan kain jarang! Pilih bahan gantian yang tebal.',
+        bad: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#FF8FB1', style: 'jarang' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } },
+        good: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } },
+        choices: [
+            { label: 'Fabrik Kapas Tebal & Longgar', ok: true },
+            { label: 'Kain Net Nipis Lutsinar', ok: false }
+        ]
+    },
+    {
+        title: 'Langkah 2: Labuhkan Tudung',
+        desc: 'Tudung masih singkat di leher. Pilih gaya tudung yang menyelamatkan aurat dada!',
+        bad: { tudung: { color: '#FFD166', style: 'singkat' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } },
+        good: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } },
+        choices: [
+            { label: 'Tudung Turban Terdedah Leher', ok: false },
+            { label: 'Shawl Labuh Menutup Dada', ok: true }
+        ]
+    },
+    {
+        title: 'Langkah 3: Tukar Seluar Ketat & Sandal',
+        desc: 'Lengkapkan penyelamatan busana dengan seluar longgar dan kasut bertutup!',
+        bad: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } },
+        good: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } },
+        choices: [
+            { label: 'Palazzo Longgar + Kasut Bertutup', ok: true },
+            { label: 'Seluar Singkat Paras Betis', ok: false }
+        ]
+    }
+];
+
+function setupMission5() {
+    document.getElementById('m-primary-btn').innerText = '🪡 TERUSKAN';
+    renderM5Controls();
+}
+
+function renderM5Controls() {
+    const s = m5RescueSteps[gameState.m5.step];
+    const done = gameState.m5.fixedSteps[gameState.m5.step];
+    render2DMannequin(done ? s.good : s.bad, false);
+    document.getElementById('stage-2d-label').innerText = `🪡 Penyelamatan ${gameState.m5.step + 1} / 3`;
+
+    document.getElementById('mission-controls-area').innerHTML = `
+        <div class="scenario-box">
+            <strong>${s.title}</strong><br>
+            <span style="font-size:0.82rem;">${s.desc}</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            ${s.choices.map((ch) => `
+                <div class="choice-card ${done && ch.ok ? 'fixed-item' : ''}" onclick="applyM5Rescue(${ch.ok})">
+                    <strong>${ch.label}</strong>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function applyM5Rescue(isOk) {
+    if (isOk) {
+        playSound('success');
+        gameState.m5.fixedSteps[gameState.m5.step] = true;
+        renderM5Controls();
+        document.getElementById('stage-2d-feedback').innerText = '✅ Berjaya dibaiki! Tekan TERUSKAN di atas.';
+    } else {
+        playSound('error');
+        openModal('⚠️', 'Masih Belum Menutup Aurat!', 'Pilihan ini masih menampakkan aurat atau terlalu ketat. Cuba pilihan yang lebih sopan.');
+    }
+}
+
+/* -------------------- MISI 6: CUSTOMER REQUEST -------------------- */
+const m6Clients = [
+    {
+        client: 'Pelanggan 1: Cikgu Aisyah 👩‍🏫',
+        request: '"Saya perlukan baju berwarna Turkuois yang longgar dan tudung labuh untuk mengajar di kelas."',
+        options: [
+            { name: 'Set Turkuois Labuh & Longgar', valid: true, outfit: { tudung: { color: '#4ECDC4', style: 'labuh' }, baju: { color: '#4ECDC4', style: 'longgar' }, bawah: { color: '#2B9EB3', style: 'skirt_labuh' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+            { name: 'Set Turkuois Lengan Pendek', valid: false, outfit: { tudung: { color: '#4ECDC4', style: 'singkat' }, baju: { color: '#4ECDC4', style: 'ketat_pendek' }, bawah: { color: '#2B9EB3', style: 'skirt_labuh' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+            { name: 'Set Merah Jambu Ketat', valid: false, outfit: { tudung: { color: '#FF8FB1', style: 'singkat' }, baju: { color: '#FF8FB1', style: 'ketat' }, bawah: { color: '#FF8FB1', style: 'ketat_skirt' }, kasut: { color: '#E86A92', style: 'bertutup' } } }
+        ]
+    },
+    {
+        client: 'Pelanggan 2: Adik Sara 👧',
+        request: '"Saya mahu pakaian berwarna Pastel Pink dengan seluar palazzo yang selesa dan tidak jarang!"',
+        options: [
+            { name: 'Blouse Chiffon Jarang Pink', valid: false, outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#FF8FB1', style: 'jarang' }, bawah: { color: '#8E7AB5', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+            { name: 'Baju Pastel Pink + Palazzo Longgar', valid: true, outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#FFA4C0', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+            { name: 'Baju Pink + Seluar Ketat Singkat', valid: false, outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#FFA4C0', style: 'longgar' }, bawah: { color: '#4A3B52', style: 'ketat_singkat' }, kasut: { color: '#D4A373', style: 'terbuka' } } }
+        ]
+    },
+    {
+        client: 'Pelanggan 3: Kakak Nadiah 🧕',
+        request: '"Saya ingin menghadiri majlis ilmu. Carikan busana berwarna Lavender yang labuh serta kasut bertutup!"',
+        options: [
+            { name: 'Busana Lavender + Sandal Terbuka', valid: false, outfit: { tudung: { color: '#C3B1E1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#D4A373', style: 'terbuka' } } },
+            { name: 'Kurung Lavender + Skirt & Kasut Bertutup', valid: true, outfit: { tudung: { color: '#C3B1E1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } } },
+            { name: 'Blouse Lavender Ketat + Tudung Singkat', valid: false, outfit: { tudung: { color: '#C3B1E1', style: 'singkat' }, baju: { color: '#C3B1E1', style: 'ketat' }, bawah: { color: '#8E7AB5', style: 'ketat_skirt' }, kasut: { color: '#E86A92', style: 'bertutup' } } }
+        ]
+    }
+];
+
+function setupMission6() {
+    document.getElementById('m-primary-btn').innerText = '🛍️ SERAHKAN PESANAN';
+    gameState.m6.chosen = 0;
+    renderM6Controls();
+}
+
+function renderM6Controls() {
+    const cl = m6Clients[gameState.m6.clientIdx];
+    const ch = gameState.m6.chosen;
+    render2DMannequin(cl.options[ch].outfit, false);
+    document.getElementById('stage-2d-label').innerText = `Pelanggan ${gameState.m6.clientIdx + 1} / 3`;
+
+    document.getElementById('mission-controls-area').innerHTML = `
+        <div class="scenario-box">
+            <strong>${cl.client}</strong><br>
+            <span style="font-size:0.82rem; font-style:italic;">${cl.request}</span>
+        </div>
+        <div class="cards-grid">
+            ${cl.options.map((opt, i) => `
+                <div class="choice-card ${ch===i?'selected':''}" onclick="playSound('wear'); gameState.m6.chosen=${i}; renderM6Controls()">
+                    <span style="font-size:1.3rem;">👗</span>
+                    <strong style="font-size:0.78rem;">${opt.name}</strong>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+/* -------------------- MISI 7: FASHION COLLECTION -------------------- */
+function setupMission7() {
+    document.getElementById('m-primary-btn').innerText = '📚 LENGKAPKAN KOLEKSI';
+    render2DMannequin(gameState.m7.currentDraft, false);
+    renderM7Controls();
+}
+
+function renderM7Controls() {
+    const tab = gameState.m7.tab;
+    const saved = gameState.m7.savedCombos;
+    document.getElementById('stage-2d-label').innerText = `📚 Koleksi Tersimpan: ${saved.length} / 3`;
+
+    document.getElementById('mission-controls-area').innerHTML = `
+        <div class="collection-slots">
+            ${[0, 1, 2].map(i => `
+                <div class="slot-box ${saved[i] ? 'filled' : ''}">
+                    ${saved[i] ? `✅ Kombinasi ${i+1}` : `Slot ${i+1} Kosong`}
+                </div>
+            `).join('')}
+        </div>
+        <div class="tabs-row">
+            <button class="tab-btn ${tab==='tudung'?'active':''}" onclick="gameState.m7.tab='tudung'; renderM7Controls()">🧕<span>Tudung</span></button>
+            <button class="tab-btn ${tab==='baju'?'active':''}" onclick="gameState.m7.tab='baju'; renderM7Controls()">👚<span>Baju</span></button>
+            <button class="tab-btn ${tab==='bawah'?'active':''}" onclick="gameState.m7.tab='bawah'; renderM7Controls()">👗<span>Bawah</span></button>
+            <button class="tab-btn ${tab==='kasut'?'active':''}" onclick="gameState.m7.tab='kasut'; renderM7Controls()">🥿<span>Kasut</span></button>
+        </div>
+        <div class="cards-grid">
+            ${itemsDB[tab].map((item, i) => `
+                <div class="choice-card ${gameState.m7.currentDraft[tab]?.id===item.id?'selected':''}" onclick="playSound('wear'); gameState.m7.currentDraft['${tab}']=itemsDB['${tab}'][${i}]; render2DMannequin(gameState.m7.currentDraft, false); renderM7Controls()">
+                    <div class="swatch-circle" style="background:${item.color}">🎀</div>
+                    <strong style="font-size:0.76rem;">${item.name}</strong>
+                </div>
+            `).join('')}
+        </div>
+        <button class="btn-game btn-turquoise" style="width:100%;" onclick="saveM7Combo()">➕ SIMPAN KOMBINASI KE KOLEKSI (${saved.length}/3)</button>
+    `;
+}
+
+function saveM7Combo() {
+    if (gameState.m7.savedCombos.length >= 3) return;
+    const d = gameState.m7.currentDraft;
+    if (!d.tudung || !d.baju || !d.bawah || !d.kasut) {
+        playSound('error');
+        openModal('👗', 'Lengkapkan Set Pakaian', 'Sila pilih tudung, baju, bahagian bawah dan kasut sebelum menyimpan ke koleksi!');
+        return;
+    }
+    if (!d.tudung.valid || !d.baju.valid || !d.bawah.valid || !d.kasut.valid) {
+        playSound('error');
+        openModal('⚠️', 'Tidak Menepati Syarak', 'Semua pakaian dalam koleksi anda mestilah labuh, longgar, tidak jarang dan menutup kaki!');
+        return;
+    }
+    playSound('success');
+    gameState.m7.savedCombos.push({ ...d });
+    gameState.m7.currentDraft = { tudung: null, baju: null, bawah: null, kasut: null };
+    render2DMannequin(gameState.m7.currentDraft, false);
+    renderM7Controls();
+}
+
+/* -------------------- MISI 8: GRAND FASHION SHOW -------------------- */
+const defaultFinaleCollection = [
+    { name: 'Koleksi Seri Rose', outfit: { tudung: { color: '#FF8FB1', style: 'labuh' }, baju: { color: '#C3B1E1', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } } },
+    { name: 'Koleksi Cahaya Turkuois', outfit: { tudung: { color: '#4ECDC4', style: 'labuh' }, baju: { color: '#FFFFFF', style: 'longgar' }, bawah: { color: '#2B9EB3', style: 'palazzo' }, kasut: { color: '#FFFFFF', style: 'bertutup' } } },
+    { name: 'Koleksi Anggun Lavender', outfit: { tudung: { color: '#C3B1E1', style: 'labuh' }, baju: { color: '#FFA4C0', style: 'longgar' }, bawah: { color: '#8E7AB5', style: 'skirt_labuh' }, kasut: { color: '#E86A92', style: 'bertutup' } } }
+];
+
+function getFinaleCollection() {
+    if (gameState.m7.savedCombos.length === 3) {
+        return gameState.m7.savedCombos.map((c, idx) => ({
+            name: `Koleksi Rekaan Anda #${idx + 1}`,
+            outfit: c
+        }));
+    }
+    return defaultFinaleCollection;
+}
+
+function setupMission8() {
+    document.getElementById('m-primary-btn').innerText = '👑 PENTASKAN AKHIR!';
+    document.getElementById('stage-2d-label').innerText = '👑 Pentas Utama Grand Finale';
+    gameState.m8.selectedComboIdx = 0;
+    gameState.m8.checks = [false, false, false];
+    renderM8Controls();
+}
+
+function renderM8Controls() {
+    const collection = getFinaleCollection();
+    const sel = gameState.m8.selectedComboIdx;
+    render2DMannequin(collection[sel].outfit, true);
+
+    const criteriaList = [
+        'Menutup aurat dengan sempurna (kepala, dada, lengan & kaki)',
+        'Potongan pakaian longgar & tidak menampakkan bentuk badan',
+        'Fabrik tebal, tidak jarang & menepati tuntutan syarak'
+    ];
+
+    document.getElementById('mission-controls-area').innerHTML = `
+        <div class="scenario-box">
+            👑 <strong>Pentas Akhir:</strong> Pilih koleksi akhir untuk diperagakan & sahkan 3 kriteria penilaian syarak!
+        </div>
+        <div class="tabs-row" style="grid-template-columns: repeat(3, 1fr);">
+            ${collection.map((item, i) => `
+                <button class="tab-btn ${sel===i?'active':''}" onclick="playSound('wear'); gameState.m8.selectedComboIdx=${i}; renderM8Controls()">
+                    👗<span>Koleksi ${i+1}</span>
+                </button>
+            `).join('')}
+        </div>
+        <div style="display:flex; flex-direction:column; gap:7px;">
+            ${criteriaList.map((crit, idx) => `
+                <div class="choice-card ${gameState.m8.checks[idx] ? 'fixed-item' : ''}" style="flex-direction:row; justify-content:space-between; padding:9px 12px; text-align:left;" onclick="playSound('click'); gameState.m8.checks[${idx}]=!gameState.m8.checks[${idx}]; renderM8Controls()">
+                    <span style="font-size:0.78rem; font-weight:700;">${crit}</span>
+                    <span style="font-size:1.1rem;">${gameState.m8.checks[idx] ? '✅' : '⬜'}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+/* ============================================================================
+   6. PENILAIAN & SEMAKAN SEMUA MISI
+============================================================================ */
+function submitCurrentMission() {
+    const id = gameState.activeMission;
+
+    if (id === 1) {
+        const o = gameState.m1.outfit;
+        if (!o.tudung || !o.baju || !o.bawah || !o.kasut) {
+            playSound('error');
+            return openModal('👗', 'Belum Lengkap', 'Pilih semua 4 item pakaian terlebih dahulu!');
+        }
+        const fails = [o.tudung, o.baju, o.bawah, o.kasut].filter(x => !x.valid).map(x => '• ' + x.msg);
+        if (fails.length) {
+            playSound('error');
+            return openModal('💡', 'Perbaiki Rekaan Anda', fails.join('\n'));
+        }
+        completeMissionSuccess(1, 100, 'Rekaan pakaian pertama anda sangat sopan, longgar dan menutup aurat!');
+    }
+    else if (id === 2) {
+        if (!gameState.m2.fixed.every(Boolean)) {
+            playSound('error');
+            return openModal('🔍', 'Belum Selesai', 'Sila periksa dan baiki kesemua 3 patung peragaan terlebih dahulu!');
+        }
+        completeMissionSuccess(2, 100, 'Ketiga-tiga rekaan telah berjaya diperiksa dan dibaiki dengan sempurna!');
+    }
+    else if (id === 3) {
+        const col = m3Collections[gameState.m3.selected];
+        if (!col.valid) {
+            playSound('error');
+            return openModal('🎤', 'Komen Juri Pentas', col.reason);
+        }
+        completeMissionSuccess(3, 100, col.reason);
+    }
+    else if (id === 4) {
+        const sc = m4Scenarios[gameState.m4.step];
+        const chosen = sc.options[gameState.m4.selectedOutfit];
+        if (!chosen.valid) {
+            playSound('error');
+            return openModal('🤔', 'Kurang Sesuai', 'Pakaian ini tidak menepati tuntutan aurat bagi situasi tersebut. Cuba pilihan satu lagi!');
+        }
+        if (gameState.m4.step < 2) {
+            playSound('success');
+            gameState.m4.step++;
+            gameState.m4.selectedOutfit = 0;
+            renderM4Controls();
+            openModal('✅', 'Tepat Sekali!', 'Mari teruskan ke situasi seterusnya!');
+        } else {
+            completeMissionSuccess(4, 100, 'Anda berjaya memilih pakaian patuh syarak untuk semua situasi harian!');
+        }
+    }
+    else if (id === 5) {
+        if (!gameState.m5.fixedSteps[gameState.m5.step]) {
+            playSound('error');
+            return openModal('🪡', 'Pilih Pembaikan', 'Klik pilihan pembaikan yang betul di bawah dahulu!');
+        }
+        if (gameState.m5.step < 2) {
+            gameState.m5.step++;
+            renderM5Controls();
+        } else {
+            completeMissionSuccess(5, 100, 'Misi penyelamatan busana berjaya! Semua pakaian kini menutup aurat.');
+        }
+    }
+    else if (id === 6) {
+        const cl = m6Clients[gameState.m6.clientIdx];
+        const chosen = cl.options[gameState.m6.chosen];
+        if (!chosen.valid) {
+            playSound('error');
+            return openModal('🛍️', 'Permintaan Belum Tepat', 'Pastikan pakaian memenuhi permintaan warna/gaya pelanggan DAN menutup aurat!');
+        }
+        if (gameState.m6.clientIdx < 2) {
+            playSound('success');
+            gameState.m6.clientIdx++;
+            gameState.m6.chosen = 0;
+            renderM6Controls();
+            openModal('😊', 'Pelanggan Sangat Berpuas Hati!', `Sekarang layan pelanggan ke-${gameState.m6.clientIdx + 1} pula!`);
+        } else {
+            completeMissionSuccess(6, 100, 'Ketiga-tiga pelanggan gembira dengan layanan dan pilihan busana patuh syarak anda!');
+        }
+    }
+    else if (id === 7) {
+        if (gameState.m7.savedCombos.length < 3) {
+            playSound('error');
+            return openModal('📚', 'Koleksi Belum Cukup', `Anda baru menyimpan ${gameState.m7.savedCombos.length}/3 kombinasi. Simpan 3 kombinasi pakaian yang sah!`);
+        }
+        completeMissionSuccess(7, 100, 'Koleksi 3 busana Muslimah anda sangat harmoni dan menepati syarak!');
+    }
+    else if (id === 8) {
+        if (!gameState.m8.checks.every(Boolean)) {
+            playSound('error');
+            return openModal('📋', 'Semakan Kriteria Juri', 'Sila tandakan kesemua 3 kriteria pakaian patuh syarak sebelum menamatkan pertunjukan fesyen akhir!');
+        }
+        completeMissionSuccess(8, 100, 'Tahniah! Koleksi akhir anda berjaya dipersembahkan di pentas utama dan memenuhi semua kriteria syarak!');
+    }
+}
+
+/* ============================================================================
+   7. SKRIN TAMAT, MODAL & KONFETI
+============================================================================ */
+function showEndScreen() {
+    playSound('success');
+    document.getElementById('hud-mission-label').innerText = 'Tamat!';
+    document.getElementById('final-score-val').innerText = gameState.score;
+
+    const badgesEl = document.getElementById('earned-badges-list');
+    badgesEl.innerHTML = missionsMeta.map((m, i) =>
+        gameState.completed[i] ? `<span class="mini-badge">🏅 ${m.badge}</span>` : ''
+    ).join('');
+
+    showLayer('screen-end');
+    launchConfetti();
+}
+
+function restartFullGame() {
+    playSound('click');
+    gameState.score = 0;
+    gameState.unlockedUpTo = 1;
+    gameState.activeMission = null;
+    gameState.completed = [false, false, false, false, false, false, false, false];
+    gameState.m1.outfit = { tudung: null, baju: null, bawah: null, kasut: null };
+    gameState.m2 = { activeIdx: 0, fixed: [false, false, false] };
+    gameState.m4 = { step: 0, selectedOutfit: 0 };
+    gameState.m5 = { step: 0, fixedSteps: [false, false, false] };
+    gameState.m6 = { clientIdx: 0, chosen: 0 };
+    gameState.m7 = { tab: 'tudung', currentDraft: { tudung: null, baju: null, bawah: null, kasut: null }, savedCombos: [] };
+    gameState.m8 = { selectedComboIdx: 0, checks: [false, false, false] };
+    updateHUD();
+    openMissionMap();
+}
+
+function openModal(icon, title, desc, buttonsHTML) {
+    document.getElementById('modal-icon').innerText = icon;
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-desc').innerText = desc;
+    document.getElementById('modal-actions').innerHTML = buttonsHTML || `<button class="btn-game btn-turquoise" onclick="closeModal()">BAIKLAH!</button>`;
+    document.getElementById('modal-overlay').style.display = 'flex';
+}
+
+function closeModal() {
+    playSound('click');
+    document.getElementById('modal-overlay').style.display = 'none';
+}
+
+function launchConfetti() {
+    const frame = document.getElementById('game-frame');
+    const colors = ['#FF8FB1', '#4ECDC4', '#FFD166', '#C3B1E1', '#FF5E7E'];
+    for (let i = 0; i < 36; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + '%';
+        c.style.top = '-15px';
+        c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animationDuration = (1.5 + Math.random() * 1.4) + 's';
+        frame.appendChild(c);
+        setTimeout(() => c.remove(), 3000);
+    }
+}
+</script>
+</body>
+</html>
